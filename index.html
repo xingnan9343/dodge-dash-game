@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>闪避冲刺</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game-shell" aria-label="闪避冲刺小游戏">
+      <section class="game-panel" aria-label="游戏区域">
+        <div class="top-bar">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <div>
+              <h1>闪避冲刺</h1>
+              <p id="statusText">准备好后开始</p>
+            </div>
+          </div>
+
+          <div class="score-board" aria-label="分数">
+            <div>
+              <span>分数</span>
+              <strong id="scoreValue">0</strong>
+            </div>
+            <div>
+              <span>最高</span>
+              <strong id="bestValue">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="gameCanvas" width="960" height="620" aria-label="游戏画布"></canvas>
+          <div class="overlay is-visible" id="gameOverlay">
+            <div class="overlay-content">
+              <p class="eyebrow" id="overlayEyebrow">街机生存挑战</p>
+              <h2 id="overlayTitle">别被砸中</h2>
+              <p id="overlayText">用方向键、WASD 或触屏拖动移动，坚持越久分数越高。</p>
+              <button class="primary-action" id="overlayButton" type="button">开始游戏</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <button class="control-button" id="startButton" type="button">开始</button>
+          <button class="control-button" id="pauseButton" type="button" disabled>暂停</button>
+          <button class="control-button" id="restartButton" type="button">重开</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
