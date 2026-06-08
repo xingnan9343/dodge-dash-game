@@ -9,11 +9,16 @@ const overlayEyebrow = document.querySelector("#overlayEyebrow");
 const overlayTitle = document.querySelector("#overlayTitle");
 const overlayText = document.querySelector("#overlayText");
 const overlayButton = document.querySelector("#overlayButton");
+const rankPanel = document.querySelector("#rankPanel");
+const rankValue = document.querySelector("#rankValue");
+const rankList = document.querySelector("#rankList");
 const startButton = document.querySelector("#startButton");
 const pauseButton = document.querySelector("#pauseButton");
 const restartButton = document.querySelector("#restartButton");
 
 const STORAGE_KEY = "dodge-dash-best-score";
+const HISTORY_KEY = "dodge-dash-score-history";
+const MAX_HISTORY = 100;
 const keys = new Set();
 const pointer = {
   active: false,
@@ -22,6 +27,7 @@ const pointer = {
 };
 
 let bestScore = Number(localStorage.getItem(STORAGE_KEY) || 0);
+let scoreHistory = loadScoreHistory();
 let state = "idle";
 let animationFrame = 0;
 let lastTime = 0;
@@ -97,17 +103,71 @@ function resumeGame() {
 function endGame() {
   state = "gameOver";
   const score = getScore();
+  const rankInfo = recordScore(score);
   if (score > bestScore) {
     bestScore = score;
     localStorage.setItem(STORAGE_KEY, String(bestScore));
   }
   burst(player.x, player.y, 24, "#ff5b6e");
-  showOverlay("挑战结束", `得分 ${score}`, `最高分 ${bestScore}。再来一局，把节奏抢回来。`, "重新开始");
+  showOverlay(
+    "挑战结束",
+    `得分 ${score}`,
+    `本局排在个人历史第 ${rankInfo.rank} 名，最高分 ${bestScore}。`,
+    "重新开始",
+    rankInfo,
+  );
   syncUi();
 }
 
 function getScore() {
   return Math.floor(elapsed * 10);
+}
+
+function loadScoreHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    if (!Array.isArray(saved)) {
+      return [];
+    }
+    return saved
+      .map((entry) => ({
+        id: Number(entry.id) || Date.now(),
+        score: Math.max(0, Math.floor(Number(entry.score) || 0)),
+        playedAt: Number(entry.playedAt) || Date.now(),
+      }))
+      .filter((entry) => entry.score >= 0)
+      .slice(0, MAX_HISTORY);
+  } catch {
+    return [];
+  }
+}
+
+function recordScore(score) {
+  const entry = {
+    id: Date.now(),
+    score,
+    playedAt: Date.now(),
+  };
+  scoreHistory = [entry, ...scoreHistory].slice(0, MAX_HISTORY);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(scoreHistory));
+
+  const ranked = getRankedHistory();
+  const rank = ranked.findIndex((item) => item.id === entry.id) + 1;
+  return {
+    rank,
+    total: ranked.length,
+    currentId: entry.id,
+    topScores: ranked.slice(0, 5),
+  };
+}
+
+function getRankedHistory() {
+  return [...scoreHistory].sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return a.playedAt - b.playedAt;
+  });
 }
 
 function getDifficulty() {
@@ -429,16 +489,44 @@ function syncUi() {
   statusText.textContent = statusMap[state];
 }
 
-function showOverlay(eyebrow, title, text, buttonText) {
+function showOverlay(eyebrow, title, text, buttonText, rankInfo = null) {
   overlayEyebrow.textContent = eyebrow;
   overlayTitle.textContent = title;
   overlayText.textContent = text;
   overlayButton.textContent = buttonText;
+  renderRankPanel(rankInfo);
   overlay.classList.add("is-visible");
 }
 
 function hideOverlay() {
   overlay.classList.remove("is-visible");
+  renderRankPanel(null);
+}
+
+function renderRankPanel(rankInfo) {
+  if (!rankInfo) {
+    rankPanel.hidden = true;
+    rankList.innerHTML = "";
+    return;
+  }
+
+  rankPanel.hidden = false;
+  rankValue.textContent = `#${rankInfo.rank}`;
+  rankList.innerHTML = rankInfo.topScores
+    .map((entry, index) => {
+      const marker = entry.id === rankInfo.currentId ? "本局" : formatPlayedAt(entry.playedAt);
+      const currentClass = entry.id === rankInfo.currentId ? " class=\"is-current\"" : "";
+      return `<li${currentClass}><span>#${index + 1}</span><strong>${entry.score}</strong><span>${marker}</span></li>`;
+    })
+    .join("");
+}
+
+function formatPlayedAt(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+  });
 }
 
 function randomBetween(min, max) {

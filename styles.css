@@ -193,6 +193,66 @@ canvas {
   line-height: 1.6;
 }
 
+.rank-panel {
+  margin-top: 14px;
+  text-align: left;
+}
+
+.rank-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(182, 243, 59, 0.26);
+  border-radius: 8px;
+  background: rgba(182, 243, 59, 0.09);
+}
+
+.rank-summary span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.rank-summary strong {
+  color: var(--lime);
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.rank-list {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rank-list li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(16, 21, 34, 0.52);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.rank-list li.is-current {
+  border-color: rgba(51, 214, 255, 0.48);
+  background: rgba(51, 214, 255, 0.12);
+  color: var(--ink);
+}
+
+.rank-list strong {
+  color: var(--ink);
+}
+
 .primary-action,
 .control-button {
   min-height: 44px;
