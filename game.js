@@ -114,19 +114,63 @@ function getDifficulty() {
   return 1 + Math.min(2.8, elapsed / 24);
 }
 
+function getSpawnEdges() {
+  const score = getScore();
+  if (score >= 1500) {
+    return ["top", "left", "right", "bottom"];
+  }
+  if (score >= 1000) {
+    return ["top", "left", "right"];
+  }
+  if (score >= 500) {
+    return ["top", "left"];
+  }
+  return ["top"];
+}
+
 function spawnObstacle() {
   const difficulty = getDifficulty();
   const size = randomBetween(18, 34 + difficulty * 4);
   const speed = randomBetween(170, 260 + difficulty * 85);
   const colors = ["#33d6ff", "#ff5b6e", "#ffc247", "#b6f33b"];
-  obstacles.push({
-    x: randomBetween(size, game.width - size),
-    y: -size - 8,
+  const edges = getSpawnEdges();
+  const edge = edges[Math.floor(Math.random() * edges.length)];
+  const drift = randomBetween(-0.28, 0.28) * speed;
+  const obstacle = {
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
     size,
-    speed,
     spin: randomBetween(-2.4, 2.4),
     angle: randomBetween(0, Math.PI * 2),
     color: colors[Math.floor(Math.random() * colors.length)],
+  };
+
+  if (edge === "left") {
+    obstacle.x = -size - 8;
+    obstacle.y = randomBetween(size, game.height - size);
+    obstacle.vx = speed;
+    obstacle.vy = drift;
+  } else if (edge === "right") {
+    obstacle.x = game.width + size + 8;
+    obstacle.y = randomBetween(size, game.height - size);
+    obstacle.vx = -speed;
+    obstacle.vy = drift;
+  } else if (edge === "bottom") {
+    obstacle.x = randomBetween(size, game.width - size);
+    obstacle.y = game.height + size + 8;
+    obstacle.vx = drift;
+    obstacle.vy = -speed;
+  } else {
+    obstacle.x = randomBetween(size, game.width - size);
+    obstacle.y = -size - 8;
+    obstacle.vx = drift;
+    obstacle.vy = speed;
+  }
+
+  obstacles.push({
+    ...obstacle,
   });
 }
 
@@ -177,11 +221,17 @@ function updateObstacles(delta) {
   }
 
   obstacles.forEach((obstacle) => {
-    obstacle.y += obstacle.speed * delta;
+    obstacle.x += obstacle.vx * delta;
+    obstacle.y += obstacle.vy * delta;
     obstacle.angle += obstacle.spin * delta;
   });
 
-  obstacles = obstacles.filter((obstacle) => obstacle.y - obstacle.size < game.height + 60);
+  obstacles = obstacles.filter((obstacle) => (
+    obstacle.x + obstacle.size > -80
+    && obstacle.x - obstacle.size < game.width + 80
+    && obstacle.y + obstacle.size > -80
+    && obstacle.y - obstacle.size < game.height + 80
+  ));
 
   if (player.invulnerable > 0) {
     return;
